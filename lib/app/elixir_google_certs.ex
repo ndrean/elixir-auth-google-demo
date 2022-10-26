@@ -10,7 +10,7 @@ defmodule App.ElixirGoogleCerts do
   @g_app_id System.get_env("GOOGLE_CLIENT_ID")
 
   @doc """
-  Receives a JWT token from Google and delivers
+  Receives a JWT token from Google and returns
   the users' credentials in case of success:
   {:ok,
     %{
