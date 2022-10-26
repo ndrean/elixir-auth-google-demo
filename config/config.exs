@@ -7,11 +7,6 @@
 # General application configuration
 import Config
 
-config :elixir_auth_google,
-  google_client_id: System.get_env("GOOGLE_CLIENT_ID"),
-  google_client_secret: System.get_env("GOOGLE_CLIENT_SECRET"),
-  google_scope: "profile email"
-
 # Configures the endpoint
 config :app, AppWeb.Endpoint,
   url: [host: "localhost"],

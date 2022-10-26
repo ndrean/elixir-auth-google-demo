@@ -1,0 +1,9 @@
+{
+    "skip_files": [
+      "test",
+      "deps",
+      "priv",
+      "_build"
+    ]
+  }
+

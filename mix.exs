@@ -5,12 +5,13 @@ defmodule App.MixProject do
     [
       app: :app,
       version: "1.5.1",
-      elixir: "~> 1.12.3",
+      elixir: "~> 1.14.1",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls]
     ]
   end
 
@@ -52,9 +53,12 @@ defmodule App.MixProject do
       {:httpoison, "~> 1.8"},
       {:joken, "~> 2.5"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:excoveralls, "~> 0.10", only: :test},
+      {:sobelow, "~> 0.8", only: :dev},
 
       # https://github.com/dwyl/elixir-auth-google
-      {:elixir_auth_google, "~> 1.5.0"}
+      {:elixir_auth_google, "~> 1.6"}
     ]
   end
 

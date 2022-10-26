@@ -2,7 +2,7 @@
 
 # `elixir-auth-google` _demo_
 
-A basic example of using Google Auth in a Phoenix App.
+A basic example of using Google Auth in a Phoenix App with two methods.
 
 [![Build Status](https://img.shields.io/travis/com/dwyl/elixir-auth-google-demo/master?color=bright-green&style=flat-square)](https://travis-ci.com/github/dwyl/elixir-auth-google-demo)
 [![codecov.io](https://img.shields.io/codecov/c/github/dwyl/elixir-auth-google/master.svg?style=flat-square)](http://codecov.io/github/dwyl/elixir-auth-google?branch=master)
@@ -11,56 +11,47 @@ A basic example of using Google Auth in a Phoenix App.
 
 > Try it: https://elixir-auth-google-demo.herokuapp.com
 
+:exclamation: maybe update with One tap ?? :exclamation:
+
 </div>
 
 # _Why_? 🤷
 
-As developers we are _always learning_ new things.
+As developers, we are _always learning_ new things.
 When we learn, we love having _detailed docs and **examples**_
-that explain _exactly_ how to get up-and-running.
+that explains _exactly_ how to get up and running.
 We write examples because we want them _ourselves_,
 if you find them useful, please :star: the repo to let us know.
 
 # _What_? 💭
 
-This project is intended as a _barebones_ demonstration of using
+This project is intended as a _barebones_ demonstration of using the module [`elixir-auth-google`](https://github.com/dwyl/elixir-auth-google) to add support for "**_Sign-in with Google_**" to any Phoenix Application.
 
-[`elixir-auth-google`](https://github.com/dwyl/elixir-auth-google)
-
-to add support for "**_Sign-in with Google_**" to any Phoenix Application.
-
-We also demonstrate how to use the **One tap**, the latest authentication functionality from Google.
+We also demonstrate how to use the [**One tap**](https://developers.google.com/identity/gsi/web/guides/overview) login, the latest authentication functionality from Google.
 
 # _Who_? 👥
 
-This demos is intended for people of all Elixir/Phoenix skill levels.
+This demo is intended for people of all Elixir/Phoenix skill levels.
 Anyone who wants the "**_Sign-in with Google_**" functionality
 without the extra steps to configure a whole auth _framework_.
 
 Following all the steps in this example should take around 10 minutes.
-However if you get stuck, please don't suffer in silence!
+However, if you get stuck, please don't suffer in silence!
 Get help by opening an issue: https://github.com/dwyl/elixir-auth-google/issues
 
 # _How?_ 💻
 
 This example follows the step-by-instructions in the docs
-[github.com/dwyl/elixir-auth-google](https://github.com/dwyl/elixir-auth-google)
-
-## 0. Create a New Phoenix App
-
-**[I removed this step to make it shorter]**
+[github.com/dwyl/elixir-auth-google](https://github.com/dwyl/elixir-auth-google) to set up a Google Login.
 
 ## 1. Add the `elixir_auth_google` package to `mix.exs` 📦
 
 Open your `mix.exs` file and add the following line to your `deps` list:
 
-> NDLR: version **"1.5.0"** <- ?
-
 ```elixir
 def deps do
   [
-    {:elixir_auth_google, "~> 1.3.0"}
-
+    {:elixir_auth_google, "~> 1.6"}
   ]
 end
 ```
@@ -69,66 +60,64 @@ Run the **`mix deps.get`** command to download.
 
 ## 2. Create the Google APIs Application OAuth2 Credentials ✨
 
-Create your Google App and download the API keys
-by follow the instructions in:
+Create your Google App and download the API keys by following the instructions:
 
 [`/create-google-app-guide.md`](https://github.com/dwyl/elixir-auth-google/blob/master/create-google-app-guide.md)
 
-By the end of this step, you should have these two environment variables defined:
+By the end of this step, you should have these two environment variables defined: :id:
 
-```yml
-GOOGLE_CLIENT_ID=631770888008-6n0oruvsm16kbkqg6u76p5cv5kfkcekt.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=MHxv6-RGF5nheXnxh1b0LNDq
+```bash
+# .env
+export GOOGLE_CLIENT_ID="6317...apps.googleusercontent.com"
+export GOOGLE_CLIENT_SECRET="MHxv6-RGF..."
 ```
 
-> ⚠️ Don't worry, these keys aren't valid.
-> They are just here for illustration purposes.
+:exclamation: Run `source .env`
 
 ## 3. Create 2 New Files ➕
 
-We need to create two files in order to handle the requests
-to the Google Auth API and display data to people using our app.
+We need to create two files to handle the requests to the Google Auth API and display data to people using our app.
 
-### 3.1 Create a `GoogleAuthController` in your Project
+### 3.1. Create a `GoogleAuthController` in your Project
 
-In order to process and _display_ the data returned by the Google OAuth2 API, we need to create a new `controller`.
+To process and _display_ the data returned by the Google OAuth2 API, we need to create a new `controller`.
 
-Create a new file called:
-`lib/app_web/controllers/google_auth_controller.ex`
-
-and add the following code:
+Create a new file and add this code:
 
 ```elixir
+# lib/app_web_controllers/googe_auth_controller.ex
+
 defmodule AppWeb.GoogleAuthController do
   use AppWeb, :controller
+  action_fallback AppWeb.LoginError
 
-  @doc """
-  `index/2` handles the callback from Google Auth API redirect.
-  """
   def index(conn, %{"code" => code}) do
-    {:ok, token} = ElixirAuthGoogle.get_token(code, conn)
-    {:ok, profile} = ElixirAuthGoogle.get_user_profile(token.access_token)
-    conn
-    |> put_view(AppWeb.PageView)
-    |> render(:welcome, profile: profile)
+    with {:ok, token} = ElixirAuthGoogle.get_token(code, conn),
+        {:ok, profile} =
+          ElixirAuthGoogle.get_user_profile(token.access_token) do
+      conn
+      |> put_view(AppWeb.PageView)
+      |> render(:welcome, profile: profile)
+    end
   end
 end
 ```
 
-This code does 3 things:
+This code does 4 things:
 
-- Create a one-time auth token based on the response `code` sent by Google
-  after the person authenticates.
-- Request the person's profile data from Google based on the `access_token`
-- Render a `:welcome` view displaying some profile data
+- Creates a one-time auth token based on the response `code` sent by Google after the person authenticates.
+- Requests the person's profile data from Google based on the `access_token`.
+- Renders a `:welcome` view displaying some profile data
   to confirm that login with Google was successful.
+- Defines a [fallback action](https://hexdocs.pm/phoenix/Phoenix.Controller.html#action_fallback/1) to trap errors.
 
-> Note: we are placing the `welcome.html.eex` template
-> in the `template/page` directory to save having to create
-> any more directories and view files.
+> Note: we are placing the `welcome.html.heex` template
+> in the `template/page` directory to save having to create another controller and view files.
+> With this, we only need to create the "Welcome" template for now.
 > You are free to organise your code however you prefer.
+> If you use the **One tap** snippet (see further below), you will _need_ to create the Welcome flow (controller, view and a copy of the template).
 
-### 3.2 Create `welcome` template 📝
+### 3.2. Create `welcome` template 📝
 
 Create a new file with the following path:
 `lib/app_web/templates/page/welcome.html.eex`
@@ -168,7 +157,7 @@ returns profile data in the following format:
 ```
 
 You can use this data however you see fit.
-(_obviously treat it with respect, only store what you need and keep it secure_)
+(_treat it with respect, only store what you need and keep it secure_)
 
 ## 4. Add the `/auth/google/callback` to `router.ex`
 
@@ -186,27 +175,23 @@ to the `GoogleAuthController` `:index` function we defined above.
 
 ## 5. Update `PageController.index`
 
-In order to display the "Sign-in with Google" button in the UI,
+To display the "Sign-in with Google" button in the UI,
 we need to _generate_ the URL for the button in the relevant controller,
 and pass it to the template.
 
 Open the `lib/app_web/controllers/page_controller.ex` file
 and update the `index` function:
 
-From:
-
 ```elixir
-def index(conn, _params) do
-  render(conn, "index.html")
-end
-```
+# lib/app_web/controllers/page_controller.ex
 
-To:
-
-```elixir
 def index(conn, _params) do
-  oauth_google_url = ElixirAuthGoogle.generate_oauth_url(conn)
-  render(conn, "index.html",[oauth_google_url: oauth_google_url])
+  with {:ok, token} <- App.ElixirAuthGoogle.get_token(code, conn),
+      {:ok, profile} <- App.ElixirAuthGoogle.get_user_profile(token.access_token) do
+    conn
+    |> put_view(AppWeb.PageView)
+    |> render(:welcome, profile: profile)
+  end
 end
 ```
 
@@ -236,89 +221,30 @@ they should see the following welcome message:
 
 ![welcome](https://user-images.githubusercontent.com/194400/70201692-494db880-170f-11ea-9776-0ffd1fdf5a72.png)
 
-To start your Phoenix server:
-
-- Install dependencies with `mix deps.get`
-- Create and migrate your database with `mix ecto.setup`
-- Install Node.js dependencies with `cd assets && npm install`
-- Start Phoenix endpoint with `mix phx.server`
-
 ## 6 Use the One tap login
 
-### 6.0 Copy the module `GoogleCerts` into your project
+### 6.0 Copy the module `ElixirGoogleCerts` into your project
 
-The module `GoogleCerts` is needed in your project.
-You can **copy** :scissors: :scissors: the file `/lib/app/google_certs.ex` and paste it into your project.
-This module verifies against Google's public keys the validity of the JWT you will receive and extracts the user's credentials from it.
+The module `ElixirGoogleCerts` is **mandatory**.
+Unlike `Elixir-auth-google`, this small snippet it is not packaged in Hex.
 
-### 6.1. Create a `OneTapController` in your Project 📝
+> This module verifies the validity of the JWT you will receive against Google's public keys and extracts the user's credentials from it.
 
-Create a new file called:
-[`lib/app_web/controllers/one_tap_controller.ex`]
+To use it in your project:
 
-Add the following code:
+- **copy** :scissors: the file `/lib/app/elixir_google_certs.ex` found in this example into your code,
+  or
+- **copy** :scissors: the code **[at the end](#elixirgooglecerts-module-for-one-tap)** of this Readme into a file with the same name.
 
-```elixir
-defmodule AppWeb.OneTapController do
-  use Phoenix.Controller
-  action_fallback AppWeb.LoginError
+### 6.1 Add the "Login with Google" Button to your Template ✨
 
-  @doc """
-  handles the callback from Google redirect.
-  """
+The "PageController" is untouched. We will only update the template it renders to add the **One tap** snippet.
 
-  def index(conn, %{"credential" => jwt}) do
-    with {:ok, profile} <-
-      App.GoogleCerts.verified_identity(jwt) do
-
-    conn
-    |> fetch_session()
-    |> put_session(:profile, profile)
-    |> put_view(AppWeb.WelcomeView)
-    |> redirect(to: AppWeb.Router.Helpers.welcome_path(conn, :index))
-    end
-  end
-end
-```
-
-This code does 3 things:
-
-- receives a one-time auth `jwt` sent by Google after the user authenticates,
-- verifies the `jwt` against Google's public key and retrieves the users credentials. This use the module `GoogleCerts` located at `/lib/app/google_certs.ex`
-- redirects to the `welcome` controller to display some profile data
-  to confirm that login with Google was successful,
-- or falls back to the error page
-
-### 6.2 Create the `/auth/one_tap` Endpoint 📍
-
-Open your **`router.ex`** file and locate the section that looks like `pipeline :api"`.
-
-Add the new `POST` endpoint: Google will send data :mailbox_with_mail: there!
-
-```elixir
-pipeline :api do
-  plug(:accepts, ["json"])
-
-  post("/auth/one_tap",
-    AppWeb.OneTapController,
-    :index
-  )
-end
-```
-
-### 6.3 Add the "Login with Google" Button to your Template ✨
-
-We leave the controller:
-
-`lib/app_web/controllers/page_controller.ex`
-
-as it is. It renders the template:
-
-`[/lib/app_web/templates/page/index.html.eex]`
-
-Update the template with the following code:
+![one-tap-login](priv/static/images/one_tap.png)
 
 ```html
+# /lib/app_web/templates/page/index.html.heex
+
 <script
   src="https://accounts.google.com/gsi/client"
   async defer>
@@ -326,7 +252,7 @@ Update the template with the following code:
 
 <div id="g_id_onload"
   data-client_id={System.get_env("GOOGLE_CLIENT_ID")}
-  data-login_uri=""   <------- see the note
+  data-login_uri="http://localhost:4000/auth/google/callback"
   data-auto_prompt="true"
   >
 </div>
@@ -342,17 +268,17 @@ Update the template with the following code:
 </div>
 ```
 
-> **Note about the fallback URI**: Google needs a URL to send back the data. They ask for an **absolute path**. You must use the **same** URL as the one you used in the **Google console**.
+It loads Google's SDK, reads Google's credentials :id: and exposes an endpoint, the URI of the login endpoint of your **own web app**.
 
-- you can fill directly the fallback URI in the template:
+> **Note about the URI**: Google asks for an **absolute path**. You must use the **same** URL as the one you used in the **Google console**.
 
-```elixir
-data-login_uri="http://localhost:4000/auth/google/callback"
-```
+You can fill directly the URI in the template as above, or instead use Javascript: it will be "automatically filled with the context value).
 
-- or use Javascript for this: open your **`app.js`** file and add the code:
+Open your **`app.js`** file and add the code (instead of filling the dataset above):
 
 ```js
+// app.js
+
 const oneTap = document.querySelector("#g_id_onload");
 
 if (oneTap) {
@@ -360,17 +286,71 @@ if (oneTap) {
 }
 ```
 
-### 6.4 Create the `welcome` flow 📝
+### 6.2 Create the `/auth/one_tap` Endpoint 📍
 
-Instead of being able to render directly from the callback controller, we need an extra step: create the "welcome" flown.
-This means that we add a controller, a view and a template.
+Google will `POST` :mailbox_with_mail: a JWT to your app after the Login dialogue.
 
-- create a new controller:
-  `[lib//app_web/controllers/welcome_controller.ex]`
+Open your **`router.ex`** file and locate the section that looks like `pipeline :api"`.
+
+Add there a new `POST` endpoint:
 
 ```elixir
+# router.ex
+
+pipeline :api do
+  plug(:accepts, ["json"])
+
+  post("/auth/one_tap",
+    AppWeb.OneTapController,
+    :index
+  )
+end
+```
+
+### 6.3. Create a `OneTapController` in your Project :new:
+
+To process the JWT, create a new controller to respond to this new endpoint:
+
+```elixir
+# lib/app_web/controllers/one_tap_controller.ex
+
+defmodule AppWeb.OneTapController do
+  use AppWeb, :controller
+  action_fallback AppWeb.LoginError
+
+  def index(conn, %{"credential" => jwt}) do
+    with {:ok, profile} <-
+      App.ElixirGoogleCerts.verified_identity(jwt) do
+
+    conn
+    |> fetch_session()
+    |> put_session(:profile, profile)
+    |> redirect(to: Routes.welcome_path(conn, :index))
+    end
+  end
+end
+```
+
+This code does 4 things:
+
+- receives a one-time auth `jwt` sent by Google after the user authenticates,
+- verifies the `jwt` against Google's public key and retrieves the users' credentials. This uses the module `GoogleCerts` located at `/lib/app/google_certs.ex`
+- redirects to the `welcome` controller to display some profile data to confirm that login with Google was successful,
+- or redirects to the fallback page on error.
+
+### 6.4 Create the `welcome` flow :new:
+
+Instead of being able to render directly from the callback controller as in the previous case, we need an extra step here since it is the browser that directed us.
+
+We just need to create the "welcome" flow that was omitted above. This means we add a controller, a view and reuse the template.
+
+- create a new controller:
+
+```elixir
+# lib/app_web/controllers/welcome_controller.ex
+
 defmodule AppWeb.WelcomeController do
-  use Phoenix.Controller
+  use AppWeb, :controller
 
   def index(conn, _p) do
     profile = get_session(conn, :profile)
@@ -380,18 +360,19 @@ end
 ```
 
 - create a "welcome" view:
-  `[lib/app_web/views/welcome_view.ex]`
 
 ```elixir
+# lib/app_web/views/welcome_view.ex
+
 defmodule AppWeb.WelcomeView do
   use AppWeb, :view
 end
 ```
 
-- create the template:
-  `[lib/app_web/templates/welcome/index.html.heex]`
+- reuse the template "welcome" but into a different folder:
 
 ```elixir
+# lib/app_web/templates/welcome/index.html.heex
 <section class="phx-hero">
   <h1> Welcome <%= @profile.given_name %>!
   <img width="32px" src={@profile.picture} >
@@ -410,18 +391,101 @@ In case of an error in the callback controller, the directive `action_fallback` 
 
 ```elixir
 defmodule AppWeb.LoginError do
-  use Phoenix.Controller
+  use AppWeb, :controller
+  require Logger
 
   def call(conn, {:error, message}) do
+    Logger.warning(inspect(message))
     conn
     |> fetch_session()
     |> fetch_flash()
-    |> put_flash(:error, inspect(message))
-    |> put_view(AppWeb.PageView)
-    |> redirect(to: AppWeb.Router.Helpers.page_path(conn, :index))
+    |> put_flash(:error, message)
+    |> redirect(to: Routes.page_path(conn, :index))
     |> halt()
   end
 end
 ```
 
 Et voilà! :rocket:
+
+### `ElixirGoogleCerts` module for One tap
+
+```elixir
+defmodule App.ElixirGoogleCerts do
+  @moduledoc """
+  The received JWT is checked for integrity versus
+  Google's public keys JWK.
+  This is based on the Joken library.
+  It exposes one function: verifed_identity/1
+  """
+
+  @g_certs3_url "https://www.googleapis.com/oauth2/v3/certs"
+  @iss "https://accounts.google.com"
+  @g_app_id System.get_env("GOOGLE_CLIENT_ID")
+
+  @doc """
+  Receives a JWT token from Google and delivers
+  the users' credentials in case of success:
+  {:ok,
+    %{
+      email: "harry@potter.com,
+      name: "Harry Potter,
+      give_name: "Harry",
+      google_id: "123456",
+      picture: "https://somehwere",
+    }
+  }
+  """
+
+  def verified_identity(jwt) do
+    with {:ok,
+          %{
+            "aud" => aud,
+            "azp" => azp,
+            "email" => email,
+            "iss" => iss,
+            "name" => name,
+            "picture" => pic,
+            "given_name" => given_name,
+            "sub" => sub
+          }} <- check_identity(jwt),
+         true <- check_user(aud, azp),
+         true <- check_iss(iss) do
+      {:ok, %{email: email, name: name, google_id: sub, picture: pic, given_name: given_name}}
+    else
+      {:error, msg} -> {:error, msg}
+      false -> {:error, "wrong check"}
+    end
+  end
+
+  # We retrieve Google's public certs JWK format
+  # to check the signature of the received token
+  defp check_identity(jwt) do
+    case Joken.peek_header(jwt) do
+      {:error, msg} ->
+        {:error, msg}
+
+      {:ok, %{"kid" => kid, "alg" => alg}} ->
+        %{"keys" => certs} =
+          @g_certs3_url
+          |> HTTPoison.get!()
+          |> Map.get(:body)
+          |> Jason.decode!()
+
+        cert = Enum.find(certs, fn cert -> cert["kid"] == kid end)
+
+        signer = Joken.Signer.create(alg, cert)
+
+        Joken.verify(jwt, signer, [])
+    end
+  end
+
+  # ---- Google post-checking recommendations
+  defp check_user(aud, azp) do
+    aud == aud() || azp == aud()
+  end
+
+  defp check_iss(iss), do: iss == @iss
+  defp aud, do: @g_app_id
+end
+```

@@ -6,8 +6,7 @@ defmodule AppWeb.GoogleAuthController do
   `index/2` handles the callback from Google Auth API redirect.
   """
   def index(conn, %{"code" => code}) do
-    with {:ok, token} <- ElixirAuthGoogle.get_token(code, conn),
-         {:ok, profile} <- ElixirAuthGoogle.get_user_profile(token.access_token) do
+    with {:ok, profile} <- App.AuthGoogle.get_profile(code, conn) do
       conn
       |> put_view(AppWeb.PageView)
       |> render(:welcome, profile: profile)
